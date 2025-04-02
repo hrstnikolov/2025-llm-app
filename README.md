@@ -19,7 +19,7 @@ chainlid run app/app.py
 mkdir 2025-llm-app
 cd 2025-llm-app
 uv init
-uv add chainlit
+uv add chainlit langchain langchain-community
 ```
 
 
