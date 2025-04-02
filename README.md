@@ -22,4 +22,9 @@ uv init
 uv add chainlit langchain langchain-community
 ```
 
+## Notes
 
+Calculating the chunk size when splitting text:
+- Llama 3.1 (including the llama3.1-8B we are using) allows a context window of 128k tokens.
+- The chunk size in RecursiveCharacterTextSplitter is in number of characters.
+- The number of documents that the LLM will remember depends on the chunk size. E.g. if we set size to 25k, we can accomodate 5 chunks/documents.
