@@ -1,0 +1,11 @@
+[project]
+name = "2025-llm-app2"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "chainlit>=2.4.400",
+    "langchain>=0.3.22",
+    "pdfplumber>=0.11.6",
+]
