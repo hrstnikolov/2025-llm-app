@@ -2,10 +2,8 @@ import chainlit as cl
 from chainlit.types import AskFileResponse
 from chromadb import EphemeralClient
 from chromadb.config import Settings
-from langchain.chains.llm import LLMChain
-from langchain.prompts import ChatPromptTemplate
+from langchain.chains.qa_with_sources.retrieval import RetrievalQAWithSourcesChain
 from langchain.schema import Document
-from langchain.schema import StrOutputParser
 from langchain.schema.embeddings import Embeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores.base import VectorStore
@@ -119,20 +117,15 @@ async def on_chat_start():
     await msg.update()
 
     # 3. Create a prompt template and LLM chain
-    model = ChatOllama(model="llama3.1")
-    prompt = ChatPromptTemplate.from_messages(
-        messages=[
-            ("system", "You are ollama, senior python developer."),
-            ("human", "{question}"),
-        ]
+    model = ChatOllama(model="llama3.1", temperature=0, steaming=True)
+    chain = RetrievalQAWithSourcesChain.from_chain_type(
+        llm=model, chain_type="stuff", retriever=search_engine.as_retriever(max_tokens_limit=4097)
     )
-    chain = LLMChain(llm=model, prompt=prompt, output_parser=StrOutputParser())
-
     cl.user_session.set("chain", chain)
 
 
 @cl.on_message
 async def main(message: cl.Message) -> None:
     chain = cl.user_session.get("chain")
-    response = await chain.ainvoke(question=message.content, callbacks=[cl.LangchainCallbackHandler()])
-    await cl.Message(content=response).send()
+    response = await chain.ainvoke(input=message.content, callbacks=[cl.LangchainCallbackHandler()])
+    await cl.Message(content=response["answer"]).send()

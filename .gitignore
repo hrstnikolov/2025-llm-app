@@ -12,3 +12,4 @@ wheels/
 .chainlit
 chainlit.md
 chroma.sqlite3
+.files
