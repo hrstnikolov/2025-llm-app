@@ -11,3 +11,4 @@ wheels/
 
 .chainlit
 chainlit.md
+chroma.sqlite3

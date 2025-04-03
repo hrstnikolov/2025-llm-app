@@ -1,14 +1,55 @@
-from tempfile import NamedTemporaryFile
-
 import chainlit as cl
 from chainlit.types import AskFileResponse
+from chromadb import EphemeralClient
+from chromadb.config import Settings
 from langchain.chains.llm import LLMChain
-from langchain.chat_models.ollama import ChatOllama
-from langchain.document_loaders import PDFPlumberLoader
 from langchain.prompts import ChatPromptTemplate
 from langchain.schema import Document
 from langchain.schema import StrOutputParser
+from langchain.schema.embeddings import Embeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores.base import VectorStore
+from langchain_chroma import Chroma
+from langchain_community.document_loaders import PDFPlumberLoader
+from langchain_ollama import ChatOllama
+from langchain_ollama import OllamaEmbeddings
+
+
+def create_search_engine(documents: list[Document], embedding: Embeddings) -> VectorStore:
+    """Create vector store from langchain documents.
+
+    Takes a list of Langchain Documents and an embedding model API wrapper
+    and build a search index using a VectorStore.
+
+    Parameters
+    ----------
+    docs : list[Document]
+        List of Langchain Documents to be indexed into
+        the search engine.
+
+    embedding : Embeddings
+        Encoder model API used to calculate embedding
+
+    Returns
+    -------
+    search_engine : VectorStore
+        Langchain VectorStore with the documents
+    """
+    client_settings = Settings(allow_reset=True, anonymized_telemetry=False)
+    client = EphemeralClient(settings=client_settings)
+
+    # Reset the search engine to ensure we don't use old copies
+    search_engine = Chroma(client=client, client_settings=client_settings)
+    search_engine._client.reset()
+
+    search_engine = Chroma.from_documents(
+        client=client,
+        documents=documents,
+        embedding=embedding,
+        client_settings=client_settings,
+    )
+
+    return search_engine
 
 
 def process_pdf(file: AskFileResponse) -> list[Document]:
@@ -50,6 +91,7 @@ def process_pdf(file: AskFileResponse) -> list[Document]:
 @cl.on_chat_start
 async def on_chat_start():
 
+    # 1. Process a pdf file and save the data in the user session
     files = None
     while files is None:
         files = await cl.AskFileMessage(
@@ -66,6 +108,17 @@ async def on_chat_start():
     msg.content = f"{file.name} processed. Loading..."
     await msg.update()
 
+    # 2. Index documents into the search engine
+    embedding = OllamaEmbeddings(model="llama3.1")
+    try:
+        search_engine = await cl.make_async(create_search_engine)(documents=docs, embedding=embedding)
+    except Exception as e:
+        await cl.Message(content=f"Error: {e}").send()
+        raise SystemError
+    msg.content = f"`{file.name}` loadded. You can now ask questions!"
+    await msg.update()
+
+    # 3. Create a prompt template and LLM chain
     model = ChatOllama(model="llama3.1")
     prompt = ChatPromptTemplate.from_messages(
         messages=[
@@ -81,5 +134,5 @@ async def on_chat_start():
 @cl.on_message
 async def main(message: cl.Message) -> None:
     chain = cl.user_session.get("chain")
-    response = await chain.arun(question=message.content, callbacks=[cl.LangchainCallbackHandler()])
+    response = await chain.ainvoke(question=message.content, callbacks=[cl.LangchainCallbackHandler()])
     await cl.Message(content=response).send()

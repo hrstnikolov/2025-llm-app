@@ -24,6 +24,12 @@ uv add chainlit langchain langchain-community
 
 ## Notes
 
+Main technologies used:
+- `chainlid` - for GUI and chatbot environment
+- `langchain` - for LLM integration and PDF processing
+- `ollama` - for LLM server
+- `chromadb` - for vector database
+
 Calculating the chunk size when splitting text:
 - Llama 3.1 (including the llama3.1-8B we are using) allows a context window of 128k tokens.
 - The chunk size in RecursiveCharacterTextSplitter is in number of characters.
