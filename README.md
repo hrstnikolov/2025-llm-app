@@ -1,28 +1,38 @@
 # LLM App
 
+Chat-with-pdf application using a local LLM and retrieval-augmented generation (RAG).
+
+![demo-image](demo/demo.png)
+
 Demo project based on [Hands-On AI: Building LLM-Powered Apps](https://www.linkedin.com/learning/hands-on-ai-building-llm-powered-apps?trk=learning-course_related-content-card&upsellOrderOrigin=default_guest_learning) course.
 
 ## Run app
 
-```bash
-# Start an ollama server
-ollama serve
+1. Create venv and install dependencies
+    ```bash
+    uv sync
+    ```
+2. Install [ollama](https://ollama.com/). On mac, do:
+    ```bash
+    brew install ollama
+    ```
+3. Download llama3.1:8b model. After the download finishes, you can close the terminal session.
+    ```bash
+    ollama run llama3.1:8b
+    ```
+4. Start an ollama server. Leave the terminal session running:
+    ```bash
+    ollama serve
+    ```
+5. Ensure the venv is activated.
+6. Open a terminal in the project root and start the app.
+    ```bash
+    chainlid run app/app.py
+    ```
+7. Upload the pdf in `sample_pdf/`. Wait for it to process.
+8. Ask a question like "What is this document about?"
 
-# Activate venv in the project root and run:
-chainlid run app/app.py
-```
-
-## Initial setup
-
-```bash
-# Setup python venv
-mkdir 2025-llm-app
-cd 2025-llm-app
-uv init
-uv add chainlit langchain langchain-community
-```
-
-## Notes
+## Details
 
 Main technologies used:
 - `chainlid` - for GUI and chatbot environment
