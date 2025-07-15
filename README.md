@@ -1,4 +1,4 @@
-# LLM App
+# RAG App with Local LLM
 
 Chat-with-pdf application using a local LLM and retrieval-augmented generation (RAG).
 
